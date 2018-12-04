@@ -22,7 +22,7 @@
 
     <app-pump-data-form [isVFD]="psat.modifications[exploreModIndex].psat.inputs.isVFD" (changeField)="focusField($event)"
       (emitCalculate)="calculate()" [settings]="settings" [exploreModIndex]="exploreModIndex" [baselineForm]="baselinePumpFluidForm"
-      [modificationForm]="modificationPumpFluidForm" [psat]="psat"></app-pump-data-form>
+      [modificationForm]="modificationPumpFluidForm" [psat]="psat" [baselinePumpEfficiency]="baselinePumpEfficiency"></app-pump-data-form>
 
     <app-system-data-form [isVFD]="psat.modifications[exploreModIndex].psat.inputs.isVFD" (changeField)="focusField($event)"
       (emitCalculate)="calculate()" [settings]="settings" [exploreModIndex]="exploreModIndex" [baselineForm]="baselineFieldDataForm"

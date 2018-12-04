@@ -1,5 +1,5 @@
 import { Component, OnInit, Input, Output, EventEmitter, SimpleChanges, ViewChild } from '@angular/core';
-import { PSAT } from '../../../shared/models/psat';
+import { PSAT, PsatOutputs } from '../../../shared/models/psat';
 import { Settings } from '../../../shared/models/settings';
 import { FormGroup } from '@angular/forms';
 import { FieldDataWarnings, PsatWarningService, MotorWarnings } from '../../psat-warning.service';
@@ -58,12 +58,15 @@ export class ExploreOpportunitiesFormComponent implements OnInit {
   baselineFieldDataWarnings: FieldDataWarnings;
   modificationFieldDataWarnings: FieldDataWarnings;
   showHeadTool: boolean = false;
+  baselinePumpEfficiency: number;
   constructor(private psatService: PsatService, private fieldDataService: FieldDataService, private pumpFluidService: PumpFluidService, private psatWarningService: PsatWarningService, private motorService: MotorService) { }
 
 
   ngOnInit() {
     this.initForms();
     this.checkWarnings();
+    let tmpResults: PsatOutputs = this.psatService.resultsExisting(this.psat.inputs, this.settings);
+    this.baselinePumpEfficiency = tmpResults.pump_efficiency;
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -104,6 +107,17 @@ export class ExploreOpportunitiesFormComponent implements OnInit {
     this.psat.modifications[this.exploreModIndex].psat.inputs = this.pumpFluidService.getPsatInputsFromForm(this.modificationPumpFluidForm, this.psat.modifications[this.exploreModIndex].psat.inputs);
     this.psat.modifications[this.exploreModIndex].psat.inputs = this.motorService.getInputsFromFrom(this.modificationMotorForm, this.psat.modifications[this.exploreModIndex].psat.inputs);
     this.psat.modifications[this.exploreModIndex].psat.inputs = this.fieldDataService.getPsatInputsFromForm(this.modificationFieldDataForm, this.psat.modifications[this.exploreModIndex].psat.inputs);
+    
+    if (this.psat.modifications[this.exploreModIndex].psat.inputs.pump_style == 11) {
+      if (this.psat.modifications[this.exploreModIndex].psat.inputs.pump_specified != this.baselinePumpEfficiency) {
+        this.psat.modifications[this.exploreModIndex].psat.inputs.useCustomEfficiency = true;
+      } else {
+        this.psat.modifications[this.exploreModIndex].psat.inputs.useCustomEfficiency = false;
+      }
+    } else {
+      this.psat.modifications[this.exploreModIndex].psat.inputs.useCustomEfficiency = true;
+    }
+
     this.checkWarnings();
     this.emitSave.emit(true);
   }
@@ -120,11 +134,11 @@ export class ExploreOpportunitiesFormComponent implements OnInit {
     this.emitAddNewMod.emit(true);
   }
 
-  setVFD(){
-    if(this.psat.modifications[this.exploreModIndex].psat.inputs.isVFD){
+  setVFD() {
+    if (this.psat.modifications[this.exploreModIndex].psat.inputs.isVFD) {
       this.modificationPumpFluidForm.controls.drive.patchValue(4);
       this.modificationPumpFluidForm.controls.specifiedDriveEfficiency.patchValue(95);
-    }else{
+    } else {
       this.modificationPumpFluidForm.controls.drive.patchValue(this.baselinePumpFluidForm.controls.drive.value);
       this.modificationPumpFluidForm.controls.specifiedDriveEfficiency.patchValue(95);
     }
@@ -141,7 +155,7 @@ export class ExploreOpportunitiesFormComponent implements OnInit {
   hideHeadToolModal() {
     this.modificationFieldDataForm.controls.head.patchValue(this.psat.modifications[this.exploreModIndex].psat.inputs.head)
     this.save();
-    this.psatService.modalOpen.next(false);    
+    this.psatService.modalOpen.next(false);
     this.headToolModal.hide();
 
     this.showHeadTool = false;

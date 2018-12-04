@@ -34,16 +34,9 @@ export class VariableFrequencyDriveFormComponent implements OnInit {
   @Output('openHeadToolModal')
   openHeadToolModal = new EventEmitter<boolean>();
 
-
-
-  pumpTypes: Array<{ display: string, value: number }>;
-  drives: Array<{ display: string, value: number }>;
-
   constructor(private convertUnitsService: ConvertUnitsService) { }
 
   ngOnInit() {
-    this.pumpTypes = pumpTypesConstant;
-    this.drives = driveConstants;
   }
 
   calculate() {

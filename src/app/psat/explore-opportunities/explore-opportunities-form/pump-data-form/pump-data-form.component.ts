@@ -28,13 +28,14 @@ export class PumpDataFormComponent implements OnInit {
   modificationForm: FormGroup;
   @Input()
   psat: PSAT;
-  
+  @Input()
+  baselinePumpEfficiency: boolean;
+
   showPumpType: boolean = false;
   showMotorDrive: boolean = false;
 
   pumpTypes: Array<{ display: string, value: number }>;
   drives: Array<{ display: string, value: number }>;
-  baselinePumpEfficiency: number;
   constructor(private pumpFluidService: PumpFluidService, private psatService: PsatService) {
 
   }
@@ -43,8 +44,6 @@ export class PumpDataFormComponent implements OnInit {
     this.pumpTypes = JSON.parse(JSON.stringify(pumpTypesConstant));
     this.pumpTypes.pop();
     this.drives = JSON.parse(JSON.stringify(driveConstants));
-    let tmpResults: PsatOutputs = this.psatService.resultsExisting(this.psat.inputs, this.settings);
-    this.baselinePumpEfficiency = tmpResults.pump_efficiency;
     this.init();
   }
 

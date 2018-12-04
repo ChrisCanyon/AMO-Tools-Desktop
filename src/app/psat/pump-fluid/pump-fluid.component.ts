@@ -42,11 +42,13 @@ export class PumpFluidComponent implements OnInit {
   tempUnit: string;
   idString: string;
   pumpFluidWarnings: { rpmError: string, temperatureError: string };
+  baselinePumpEfficiency: number;
   constructor(private psatService: PsatService, private psatWarningService: PsatWarningService, private compareService: CompareService, private helpPanelService: HelpPanelService, private convertUnitsService: ConvertUnitsService, private pumpFluidService: PumpFluidService) { }
 
   ngOnInit() {
     if (!this.baseline) {
       this.idString = 'psat_modification_' + this.modificationIndex;
+      this.baselinePumpEfficiency = this.psatService.resultsExisting(this.compareService.baselinePSAT.inputs, this.settings).pump_efficiency;
     }
     else {
       this.idString = 'psat_baseline';
@@ -147,8 +149,7 @@ export class PumpFluidComponent implements OnInit {
   }
 
   disablePumpType() {
-    let baselinePumpEfficiency: number = this.psatService.resultsExisting(this.compareService.baselinePSAT.inputs, this.settings).pump_efficiency;
-    this.psatForm.controls.specifiedPumpEfficiency.patchValue(baselinePumpEfficiency);
+    this.psatForm.controls.specifiedPumpEfficiency.patchValue(this.baselinePumpEfficiency);
     this.psatForm.controls.specifiedPumpEfficiency.enable();
     this.psatForm.controls.pumpType.patchValue(11);
     this.psatForm.controls.pumpType.disable();
@@ -216,6 +217,17 @@ export class PumpFluidComponent implements OnInit {
   save() {
     //update object values from form values
     this.psat.inputs = this.pumpFluidService.getPsatInputsFromForm(this.psatForm, this.psat.inputs);
+    if (!this.baseline) {
+      if (this.psat.inputs.pump_style == 11) {
+        if (this.psat.inputs.pump_specified != this.baselinePumpEfficiency) {
+          this.psat.inputs.useCustomEfficiency = true;
+        }else{
+          this.psat.inputs.useCustomEfficiency = false;
+        }
+      } else {
+        this.psat.inputs.useCustomEfficiency = true;
+      }
+    }
     //check warnings
     this.checkWarnings();
     //save

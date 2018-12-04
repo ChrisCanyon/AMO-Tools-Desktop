@@ -44,7 +44,7 @@ export class PsatComponent implements OnInit {
 
   assessment: Assessment;
   currentTab: string = 'system-setup';
-  
+
   //used for sankey
   //TODO: move this and sankey choosing logic oput of this component
   psatOptions: Array<any>;
@@ -69,6 +69,8 @@ export class PsatComponent implements OnInit {
   stepTabSubscription: Subscription;
   stepTab: string;
   modalOpenSub: Subscription;
+  getResultsSub: Subscription;
+  baselineEfficiency: number;
   constructor(
     private location: Location,
     private assessmentService: AssessmentService,
@@ -166,6 +168,15 @@ export class PsatComponent implements OnInit {
       this.modalOpenSub = this.psatService.modalOpen.subscribe(isOpen => {
         this.isModalOpen = isOpen;
       })
+
+      this.getResultsSub = this.psatService.getResults.subscribe(val => {
+        if (this._psat) {
+          if (this.psatService.isPsatValid(this._psat.inputs, true)) {
+            let baselineResults: PsatOutputs = this.psatService.resultsExisting(this._psat.inputs, this.settings);
+            this.baselineEfficiency = baselineResults.pump_efficiency;
+          }
+        }
+      })
     })
   }
 
@@ -182,6 +193,7 @@ export class PsatComponent implements OnInit {
     this.psatTabService.secondaryTab.next('explore-opportunities');
     this.psatTabService.mainTab.next('system-setup');
     this.psatTabService.stepTab.next('system-basics');
+    if (this.getResultsSub) this.getResultsSub.unsubscribe();
   }
 
   ngAfterViewInit() {
@@ -320,7 +332,12 @@ export class PsatComponent implements OnInit {
         mod.psat.inputs.motor_field_current = this._psat.inputs.motor_field_current;
         mod.psat.inputs.motor_field_power = this._psat.inputs.motor_field_power;
         mod.psat.inputs.motor_field_voltage = this._psat.inputs.motor_field_voltage;
+        if (mod.psat.inputs.useCustomEfficiency == false || mod.psat.inputs.useCustomEfficiency == undefined) {
+          mod.psat.inputs.pump_specified = this.baselineEfficiency;
+        }
       })
+
+
     } else {
       this.modificationExists = false;
     }
@@ -390,8 +407,7 @@ export class PsatComponent implements OnInit {
     }
     tmpModification.psat.inputs = (JSON.parse(JSON.stringify(this._psat.inputs)));
     tmpModification.psat.inputs.pump_style = 11;
-    let baselineResults: PsatOutputs = this.psatService.resultsExisting(this._psat.inputs, this.settings);
-    tmpModification.psat.inputs.pump_specified = baselineResults.pump_efficiency;
+    tmpModification.psat.inputs.pump_specified = this.baselineEfficiency;
     this.saveNewMod(tmpModification)
   }
 }
